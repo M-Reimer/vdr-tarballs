@@ -3,8 +3,8 @@ Helper tools used to administrate the VDR GIT repository
 
 This repository contains scripts and other helpers used to administrate the VDR GIT repository.
 
-vdrpatch2gitcommit.pl
----------------------
+vdrpatch2commit.pl
+------------------
 
 Takes FTP link to a VDR patch and creates a new GIT commit from the information in the patch file.
 
