@@ -3,9 +3,7 @@
 use strict;
 use warnings;
 use Net::FTP;
-use Data::Dumper;
 use File::Basename;
-my $selfpath = dirname(__FILE__);
 
 {#main
   # Get command FTP link from command line parameter
@@ -31,7 +29,8 @@ my $selfpath = dirname(__FILE__);
 
   # Download patch file
   my $patchfilename = basename($path);
-  $ftp->get($path, "$selfpath/$patchfilename");
+  $ftp->get($path, $patchfilename)
+    or die($ftp->message);
 
   # Create commit message
   my $commitmessage = $patchfilename;
@@ -40,11 +39,11 @@ my $selfpath = dirname(__FILE__);
 
 
   # Now apply patch to the files in the GIT repo
-  system('patch', '-i', $patchfile);
+  system('patch', '-i', $patchfilename);
   die("Failed to patch\n") if ($?);
 
   # Remove patch file
-  unlink($patchfile);
+  unlink($patchfilename);
 
   # Create commit
   system('git', 'commit', '--author=Klaus', "--date=$modtime", '-am', $commitmessage);
