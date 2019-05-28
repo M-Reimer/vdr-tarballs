@@ -2,35 +2,28 @@
 
 use strict;
 use warnings;
-use Net::FTP;
+use LWP;
 use File::Basename;
 
 {#main
-  # Get command FTP link from command line parameter
+  # Get FTP/HTTP link from command line parameter
   my ($link) = @ARGV
-    or die("Give FTP link as command line parameter!\n");
+    or die("Give FTP/HTTP link as command line parameter!\n");
 
-  # Split link and check protocol
-  my ($proto, $host, $path) = $link =~ m#([^/]+)://([^/]+)/(.+)#
-    or die("Invalid link format: $link");
-  die ("Only FTP links allowed!\n") if ($proto ne "ftp");
+  # Connect to FTP/HTTP server
+  my $browser = LWP::UserAgent->new;
+  my $response = $browser->get($link);
+  die("Failed to load $link " . $response->status_line)
+    unless($response->is_success);
 
-  # Connect to FTP server
-  my $ftp = Net::FTP->new($host)
-    or die("Failed to connect: $@");
-  $ftp->passive(1)
-    or die($ftp->message);
-  $ftp->login("anonymous",'-anonymous@')
-    or die($ftp->message);
+  # Get modification time of patch file
+  my $modtime = $response->last_modified;
 
-  # Get modification time of patch file (also checks for file existence)
-  my $modtime = $ftp->mdtm($path)
-    or die("Invalid path: $path\n");
-
-  # Download patch file
-  my $patchfilename = basename($path);
-  $ftp->get($path, $patchfilename)
-    or die($ftp->message);
+  # Save patch file
+  my $patchfilename = basename($link);
+  open(my $fh, '>', $patchfilename) or die($!);
+  print $fh $response->content;
+  close($fh);
 
   # Create commit message
   my $commitmessage = $patchfilename;
