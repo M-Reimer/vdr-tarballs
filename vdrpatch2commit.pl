@@ -59,7 +59,10 @@ sub GetCommentFromPatch {
   my $comment = "";
   while (my $line = <$fh>) {
     chomp($line);
+    # First line of actual patch info found
     last if ($line =~ /^--- /);
+    # Sometimes the used "diff" command is the last line in the comment area
+    last if ($line =~ /^diff /);
     $line =~ s/^# *//;
     $comment .= ' ' . $line;
   }
